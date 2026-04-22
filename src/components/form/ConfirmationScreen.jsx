@@ -1,40 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../../lib/supabase'
 
-export default function ConfirmationScreen({ sessionId }) {
+export default function ConfirmationScreen({ sessionCode }) {
   const navigate = useNavigate()
-  const [sessionCode, setSessionCode] = useState('')
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchSessionCode()
-  }, [sessionId])
-
-  async function fetchSessionCode() {
-    try {
-      const { data, error } = await supabase
-        .from('sessions')
-        .select('session_code')
-        .eq('id', sessionId)
-        .single()
-
-      if (error) throw error
-      setSessionCode(data.session_code)
-    } catch (err) {
-      console.error('Error fetching session code:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className='min-h-screen bg-cream flex items-center justify-center p-4'>
-        <div className='spinner h-8 w-8 border-4 border-gold border-t-transparent rounded-full'></div>
-      </div>
-    )
-  }
 
   return (
     <div className='min-h-screen bg-cream flex items-center justify-center p-4'>
@@ -51,10 +19,10 @@ export default function ConfirmationScreen({ sessionId }) {
 
         <div className='bg-gold/10 border border-gold rounded-lg p-4 mb-6'>
           <p className='text-sm text-gray-700 mb-2'>
-            <strong>Your Session Code:</strong>
+            <strong>Your Reference Code:</strong>
           </p>
           <p className='text-2xl font-mono font-bold text-gold mb-3'>
-            {sessionCode}
+            {sessionCode || 'Unavailable'}
           </p>
           <p className='text-xs text-gray-600'>
             Save this code for your records. You'll need it if you want to
@@ -75,7 +43,7 @@ export default function ConfirmationScreen({ sessionId }) {
                 ✓ You'll be assigned a counsellor once all recommendations are
                 received
               </li>
-              <li>✓ We'll contact you via WhatsApp with next steps</li>
+              <li>✓ We'll contact you by SMS or email with next steps</li>
             </ul>
           </div>
         </div>

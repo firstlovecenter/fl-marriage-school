@@ -12,10 +12,16 @@ export default function S8Declaration({ formData, onNext, onBack, isSaving }) {
   const [submitAttempted, setSubmitAttempted] = React.useState(false)
 
   useEffect(() => {
-    // Clear canvases on mount
+    setData(formData || {})
+    setAgreed(Boolean(formData?.declaration_agreed_at))
+    setSigningProgress({
+      male_signature_url: formData?.male_signature_url ? 'done' : undefined,
+      female_signature_url: formData?.female_signature_url ? 'done' : undefined,
+    })
+
     if (maleSignatureRef.current) maleSignatureRef.current.clear()
     if (femaleSignatureRef.current) femaleSignatureRef.current.clear()
-  }, [])
+  }, [formData])
 
   const saveSignature = async (canvasRef, field, sessionId) => {
     if (!canvasRef.current || canvasRef.current.isEmpty()) {
@@ -152,11 +158,21 @@ export default function S8Declaration({ formData, onNext, onBack, isSaving }) {
         </p>
 
         <div className='border-2 border-deep rounded-lg overflow-hidden bg-white'>
-          <SignatureCanvas
-            ref={maleSignatureRef}
-            canvasProps={{ width: 500, height: 200, className: 'w-full' }}
-            penColor='#1C1612'
-          />
+          {data?.male_signature_url ? (
+            <div className='flex min-h-[200px] items-center justify-center bg-gray-50 p-4'>
+              <img
+                src={data.male_signature_url}
+                alt='Saved groom signature'
+                className='max-h-44 w-full object-contain'
+              />
+            </div>
+          ) : (
+            <SignatureCanvas
+              ref={maleSignatureRef}
+              canvasProps={{ width: 500, height: 200, className: 'w-full' }}
+              penColor='#1C1612'
+            />
+          )}
         </div>
 
         <div className='flex gap-2'>
@@ -169,6 +185,7 @@ export default function S8Declaration({ formData, onNext, onBack, isSaving }) {
                 male_signature_url: undefined,
               }))
               setData((prev) => ({ ...prev, male_signature_url: undefined }))
+              setErrors((prev) => ({ ...prev, male_signature_url: '' }))
             }}
             className='btn btn-secondary text-sm'
           >
@@ -211,11 +228,21 @@ export default function S8Declaration({ formData, onNext, onBack, isSaving }) {
         </p>
 
         <div className='border-2 border-deep rounded-lg overflow-hidden bg-white'>
-          <SignatureCanvas
-            ref={femaleSignatureRef}
-            canvasProps={{ width: 500, height: 200, className: 'w-full' }}
-            penColor='#1C1612'
-          />
+          {data?.female_signature_url ? (
+            <div className='flex min-h-[200px] items-center justify-center bg-gray-50 p-4'>
+              <img
+                src={data.female_signature_url}
+                alt='Saved bride signature'
+                className='max-h-44 w-full object-contain'
+              />
+            </div>
+          ) : (
+            <SignatureCanvas
+              ref={femaleSignatureRef}
+              canvasProps={{ width: 500, height: 200, className: 'w-full' }}
+              penColor='#1C1612'
+            />
+          )}
         </div>
 
         <div className='flex gap-2'>
@@ -228,6 +255,7 @@ export default function S8Declaration({ formData, onNext, onBack, isSaving }) {
                 female_signature_url: undefined,
               }))
               setData((prev) => ({ ...prev, female_signature_url: undefined }))
+              setErrors((prev) => ({ ...prev, female_signature_url: '' }))
             }}
             className='btn btn-secondary text-sm'
           >

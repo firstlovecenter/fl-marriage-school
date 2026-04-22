@@ -41,6 +41,7 @@ export default function ReviewScreen({
   onBack,
   submitError,
   submitting,
+  alreadySubmitted,
 }) {
   const bothSignaturesPresent =
     formData?.male_signature_url && formData?.female_signature_url
@@ -77,6 +78,12 @@ export default function ReviewScreen({
         {submitError && (
           <div className='bg-error/10 border border-error rounded-lg p-4 mb-6 text-error'>
             <strong>Submission failed:</strong> {submitError}
+          </div>
+        )}
+
+        {alreadySubmitted && (
+          <div className='bg-success/10 border border-success rounded-lg p-4 mb-6 text-success'>
+            <strong>Registration already submitted:</strong> This application has already been sent for review. You can still inspect the saved information below.
           </div>
         )}
 
@@ -319,17 +326,23 @@ export default function ReviewScreen({
           <button onClick={onBack} className='btn btn-secondary flex-1'>
             Back
           </button>
-          <button
-            onClick={onSubmit}
-            disabled={!bothSignaturesPresent || submitting}
-            className={`btn flex-1 ${
-              bothSignaturesPresent && !submitting
-                ? 'btn-primary'
-                : 'bg-gray-300 text-gray-600 cursor-not-allowed'
-            }`}
-          >
-            {submitting ? 'Submitting...' : 'Submit Registration'}
-          </button>
+          {alreadySubmitted ? (
+            <div className='flex-1 rounded-lg border border-success bg-success/10 px-4 py-3 text-center font-semibold text-success'>
+              Already Submitted
+            </div>
+          ) : (
+            <button
+              onClick={onSubmit}
+              disabled={!bothSignaturesPresent || submitting}
+              className={`btn flex-1 ${
+                bothSignaturesPresent && !submitting
+                  ? 'btn-primary'
+                  : 'bg-gray-300 text-gray-600 cursor-not-allowed'
+              }`}
+            >
+              {submitting ? 'Submitting...' : 'Submit Registration'}
+            </button>
+          )}
         </div>
       </div>
     </div>

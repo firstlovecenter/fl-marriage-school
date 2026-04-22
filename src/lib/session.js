@@ -127,6 +127,10 @@ export async function getOrCreateRegistration(sessionId) {
  */
 export function inferCompletedSections(registration) {
   const completed = []
+  const declarationCompleted =
+    Boolean(registration.male_signature_url) &&
+    Boolean(registration.female_signature_url)
+  const registrationSubmitted = Boolean(registration.submitted_at)
 
   // S1: Personal Details
   if (registration.male_name && registration.female_name) {
@@ -139,7 +143,10 @@ export function inferCompletedSections(registration) {
   }
 
   // S3: Education
-  if (registration.male_occupation && registration.female_occupation) {
+  if (
+    (registration.male_education_level || registration.male_occupation) &&
+    (registration.female_education_level || registration.female_occupation)
+  ) {
     completed.push(3)
   }
 
@@ -164,13 +171,15 @@ export function inferCompletedSections(registration) {
   // S7: Medical
   if (
     registration.male_medical_report_urls ||
-    registration.female_medical_report_urls
+    registration.female_medical_report_urls ||
+    declarationCompleted ||
+    registrationSubmitted
   ) {
     completed.push(7)
   }
 
   // S8: Declaration
-  if (registration.male_signature_url && registration.female_signature_url) {
+  if (declarationCompleted) {
     completed.push(8)
   }
 
@@ -182,6 +191,19 @@ export function inferCompletedSections(registration) {
  * Used to resume form at correct position
  */
 export function getLastCompletedSection(completedSections) {
-  if (completedSections.length === 0) return 1
-  return Math.max(...completedSections)
+  if (!Array.isArray(completedSections) || completedSections.length === 0) {
+    return 1
+  }
+
+  const completedSet = new Set(completedSections)
+
+  // Return the first missing section in sequence (prevents jumping ahead).
+  for (let section = 1; section <= 8; section += 1) {
+    if (!completedSet.has(section)) {
+      return section
+    }
+  }
+
+  // All sections completed
+  return 8
 }

@@ -6,8 +6,57 @@ export default function S5ChurchInfo({ formData, onNext, onBack, isSaving }) {
   const [touched, setTouched] = React.useState({})
   const [submitAttempted, setSubmitAttempted] = React.useState(false)
 
-  const handleChange = (field, value) =>
-    setData((prev) => ({ ...prev, [field]: value }))
+  const pastorPhoneFields = ['male_pastor_phone', 'female_pastor_phone']
+
+  const isPastorPhoneField = (field) => pastorPhoneFields.includes(field)
+
+  const sanitizePhoneInput = (value) =>
+    String(value || '')
+      .replace(/[^\d+]/g, '')
+      .replace(/(?!^)\+/g, '')
+
+  const normalizePastorPhone = (value) => {
+    const digits = String(value || '').replace(/\D/g, '')
+    if (!digits) return ''
+
+    if (digits.startsWith('0') && digits.length === 10) {
+      return `+233${digits.slice(1)}`
+    }
+
+    if (digits.startsWith('233') && digits.length === 12) {
+      return `+${digits}`
+    }
+
+    if (digits.length === 9) {
+      return `+233${digits}`
+    }
+
+    return String(value || '').trim()
+  }
+
+  const isValidPastorPhone = (value) => {
+    const digits = String(value || '').replace(/\D/g, '')
+    return (
+      (digits.length === 10 && digits.startsWith('0')) ||
+      (digits.length === 12 && digits.startsWith('233')) ||
+      digits.length === 9
+    )
+  }
+
+  const handleChange = (field, value) => {
+    const nextValue = isPastorPhoneField(field)
+      ? sanitizePhoneInput(value)
+      : value
+
+    setData((prev) => ({ ...prev, [field]: nextValue }))
+
+    if (touched[field] || submitAttempted) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: validateField(field, nextValue),
+      }))
+    }
+  }
 
   const validateField = (field, value) => {
     const requiredFields = [
@@ -21,14 +70,33 @@ export default function S5ChurchInfo({ formData, onNext, onBack, isSaving }) {
     if (requiredFields.includes(field) && !value?.trim()) {
       return 'This field is required'
     }
+
+    if (
+      isPastorPhoneField(field) &&
+      value?.trim() &&
+      !isValidPastorPhone(value)
+    ) {
+      return 'Use a valid phone number (e.g. 0551234567 or +233551234567)'
+    }
+
     return ''
   }
 
   const onBlurField = (field) => {
+    let value = data?.[field]
+
+    if (isPastorPhoneField(field)) {
+      const normalized = normalizePastorPhone(value)
+      if (normalized !== value) {
+        setData((prev) => ({ ...prev, [field]: normalized }))
+      }
+      value = normalized
+    }
+
     setTouched((prev) => ({ ...prev, [field]: true }))
     setErrors((prev) => ({
       ...prev,
-      [field]: validateField(field, data?.[field]),
+      [field]: validateField(field, value),
     }))
   }
 
@@ -37,6 +105,14 @@ export default function S5ChurchInfo({ formData, onNext, onBack, isSaving }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    const normalizedData = {
+      ...data,
+      male_pastor_phone: normalizePastorPhone(data?.male_pastor_phone),
+      female_pastor_phone: normalizePastorPhone(data?.female_pastor_phone),
+    }
+
+    setData(normalizedData)
 
     setSubmitAttempted(true)
     const requiredFields = [
@@ -49,7 +125,7 @@ export default function S5ChurchInfo({ formData, onNext, onBack, isSaving }) {
     ]
     const nextErrors = {}
     requiredFields.forEach((field) => {
-      const message = validateField(field, data?.[field])
+      const message = validateField(field, normalizedData?.[field])
       if (message) nextErrors[field] = message
     })
     setErrors(nextErrors)
@@ -65,7 +141,7 @@ export default function S5ChurchInfo({ formData, onNext, onBack, isSaving }) {
       return
     }
 
-    await onNext?.(data)
+    await onNext?.(normalizedData)
   }
 
   return (

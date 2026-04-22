@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { useFormSession } from '../../hooks/useFormSession'
 import { getLastCompletedSection } from '../../lib/session'
 import { supabase } from '../../lib/supabase'
-import { sendArkeselMessage } from '../../lib/arkesel'
+import { sendSmsMessage } from '../../lib/mnotify'
 import { syncToGoogleSheets } from '../../lib/sheets'
 
 // Section components (we'll create these next)
@@ -35,12 +35,15 @@ export default function FormShell() {
   const [currentSection, setCurrentSection] = useState(1)
   const [showReview, setShowReview] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
+  const hasAutoRoutedRef = React.useRef(false)
   const [submitState, setSubmitState] = useState({
     loading: false,
     error: '',
   })
 
   const registration = session.formData
+  const alreadySubmitted =
+    Boolean(registration?.submitted_at) || session.sessionStatus === 'submitted'
 
   const generatePastorToken = () => crypto.randomUUID()
 
@@ -48,6 +51,8 @@ export default function FormShell() {
     [registration?.male_name, registration?.female_name]
       .filter(Boolean)
       .join(' & ')
+
+  const referenceCode = session.sessionCode || 'Loading...'
 
   const upsertPastorRecommendations = async () => {
     const { data: existingRecommendations, error: existingError } =
@@ -118,9 +123,9 @@ export default function FormShell() {
         const pastorName = recommendation.pastor_name || 'Pastor'
         const link = `${baseUrl}/pastor/${recommendation.token}`
 
-        return sendArkeselMessage({
+        return sendSmsMessage({
           to: recommendation.pastor_phone,
-          message: `Dear ${pastorName}, ${coupleName} have registered for premarital counselling at First Love Marriage School and listed you as a recommending pastor. Please complete your pastoral recommendation here: ${link}`,
+          message: `Dear ${pastorName}, ${coupleName} have registered for premarital counselling at First Love Marriage School and listed you as a recommending pastor. Kindly complete your pastoral recommendation here: ${link}`,
         })
       })
 
@@ -130,15 +135,15 @@ export default function FormShell() {
   const sendCoupleNotifications = async () => {
     const tasks = [
       registration?.male_phone
-        ? sendArkeselMessage({
+        ? sendSmsMessage({
             to: registration.male_phone,
-            message: `Hi ${registration.male_name || 'there'}, your registration with First Love Marriage School is complete. Your pastors have been notified and a counsellor will be assigned once their recommendations are received.`,
+            message: `Hi ${registration.male_name || 'there'}, your First Love Marriage School registration has been received. Your reference code is ${session.sessionCode}. Keep it to resume or track your submission.`,
           })
         : null,
       registration?.female_phone
-        ? sendArkeselMessage({
+        ? sendSmsMessage({
             to: registration.female_phone,
-            message: `Hi ${registration.female_name || 'there'}, your registration with First Love Marriage School is complete. Your pastors have been notified and a counsellor will be assigned once their recommendations are received.`,
+            message: `Hi ${registration.female_name || 'there'}, your First Love Marriage School registration has been received. Your reference code is ${session.sessionCode}. Keep it to resume or track your submission.`,
           })
         : null,
     ].filter(Boolean)
@@ -146,9 +151,25 @@ export default function FormShell() {
     return Promise.allSettled(tasks)
   }
 
-  // Determine which section to start at
+  // Reset one-time auto-routing when the session changes.
   React.useEffect(() => {
-    if (!session.loading && !showReview && !showConfirmation) {
+    hasAutoRoutedRef.current = false
+  }, [sessionId])
+
+  // Determine which section to start at (once per session load).
+  React.useEffect(() => {
+    if (
+      !session.loading &&
+      !showConfirmation &&
+      !hasAutoRoutedRef.current
+    ) {
+      if (alreadySubmitted) {
+        setShowReview(false)
+        setShowConfirmation(true)
+        hasAutoRoutedRef.current = true
+        return
+      }
+
       const lastComplete = getLastCompletedSection(session.completedSections)
       if (lastComplete === 8) {
         // All sections complete, go to review
@@ -156,8 +177,15 @@ export default function FormShell() {
       } else {
         setCurrentSection(lastComplete)
       }
+
+      hasAutoRoutedRef.current = true
     }
-  }, [session.loading, session.completedSections, showReview, showConfirmation])
+  }, [
+    alreadySubmitted,
+    session.loading,
+    session.completedSections,
+    showConfirmation,
+  ])
 
   const handleNext = useCallback(
     async (sectionData) => {
@@ -257,7 +285,7 @@ export default function FormShell() {
   }
 
   if (showConfirmation) {
-    return <ConfirmationScreen sessionId={sessionId} />
+    return <ConfirmationScreen sessionCode={session.sessionCode} />
   }
 
   return (
@@ -267,6 +295,19 @@ export default function FormShell() {
           {/* Desktop Sidebar */}
           <aside className='hidden lg:block'>
             <div className='bg-white rounded-lg shadow-sm p-4 sticky top-8'>
+              <div className='mb-4 rounded-lg border border-gold/40 bg-gold/10 p-3'>
+                <p className='text-xs font-semibold uppercase tracking-wide text-gray-600'>
+                  Reference Code
+                </p>
+                <p className='mt-1 font-mono text-lg font-bold text-gold'>
+                  {referenceCode}
+                </p>
+                <p className='mt-1 text-xs text-gray-600'>
+                  Keep this code. You can use it to resume or track this
+                  registration.
+                </p>
+              </div>
+
               <h3 className='font-serif font-bold text-lg mb-4'>Progress</h3>
               <nav className='space-y-2'>
                 {SECTIONS.map((section) => (
@@ -314,11 +355,21 @@ export default function FormShell() {
                 onBack={handleBack}
                 submitError={submitState.error}
                 submitting={submitState.loading}
+                alreadySubmitted={alreadySubmitted}
               />
             ) : (
               <div>
                 {/* Mobile Progress Indicator */}
                 <div className='lg:hidden mb-6 bg-white rounded-lg shadow-sm p-4'>
+                  <div className='mb-4 rounded-lg border border-gold/40 bg-gold/10 p-3'>
+                    <p className='text-xs font-semibold uppercase tracking-wide text-gray-600'>
+                      Reference Code
+                    </p>
+                    <p className='mt-1 font-mono text-base font-bold text-gold'>
+                      {referenceCode}
+                    </p>
+                  </div>
+
                   <div className='flex justify-between items-center'>
                     <span className='text-sm font-semibold'>
                       Section {currentSection} of 8

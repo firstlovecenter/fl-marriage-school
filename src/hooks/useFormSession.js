@@ -9,6 +9,8 @@ import { inferCompletedSections } from '../lib/session'
 export function useFormSession(sessionId) {
   const [formData, setFormData] = useState({})
   const [completedSections, setCompletedSections] = useState([])
+  const [sessionCode, setSessionCode] = useState('')
+  const [sessionStatus, setSessionStatus] = useState('incomplete')
   const [loading, setLoading] = useState(true)
   const [saveError, setSaveError] = useState('')
   const [isSaving, setIsSaving] = useState(false)
@@ -30,6 +32,19 @@ export function useFormSession(sessionId) {
       isInitializingRef.current = true
       setLoading(true)
       setSaveError('')
+
+      const { data: sessionRow, error: sessionError } = await supabase
+        .from('sessions')
+        .select('session_code')
+        .eq('id', sessionId)
+        .single()
+
+      if (sessionError) {
+        throw sessionError
+      }
+
+      setSessionCode(sessionRow?.session_code || '')
+      setSessionStatus(sessionRow?.status || 'incomplete')
 
       // Get latest registration for this session (handles legacy duplicate rows safely)
       const { data: registrations, error: regError } = await supabase
@@ -191,6 +206,8 @@ export function useFormSession(sessionId) {
     formData,
     registrationId,
     completedSections,
+    sessionCode,
+    sessionStatus,
     loading,
     isSaving,
     saveError,

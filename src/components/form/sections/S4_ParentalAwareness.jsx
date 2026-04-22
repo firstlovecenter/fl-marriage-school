@@ -11,8 +11,57 @@ export default function S4ParentalAwareness({
   const [touched, setTouched] = React.useState({})
   const [submitAttempted, setSubmitAttempted] = React.useState(false)
 
-  const handleChange = (field, value) =>
-    setData((prev) => ({ ...prev, [field]: value }))
+  const parentPhoneFields = ['male_parent_contact', 'female_parent_contact']
+
+  const isParentPhoneField = (field) => parentPhoneFields.includes(field)
+
+  const sanitizePhoneInput = (value) =>
+    String(value || '')
+      .replace(/[^\d+]/g, '')
+      .replace(/(?!^)\+/g, '')
+
+  const normalizeParentPhone = (value) => {
+    const digits = String(value || '').replace(/\D/g, '')
+    if (!digits) return ''
+
+    if (digits.startsWith('0') && digits.length === 10) {
+      return `+233${digits.slice(1)}`
+    }
+
+    if (digits.startsWith('233') && digits.length === 12) {
+      return `+${digits}`
+    }
+
+    if (digits.length === 9) {
+      return `+233${digits}`
+    }
+
+    return String(value || '').trim()
+  }
+
+  const isValidParentPhone = (value) => {
+    const digits = String(value || '').replace(/\D/g, '')
+    return (
+      (digits.length === 10 && digits.startsWith('0')) ||
+      (digits.length === 12 && digits.startsWith('233')) ||
+      digits.length === 9
+    )
+  }
+
+  const handleChange = (field, value) => {
+    const nextValue = isParentPhoneField(field)
+      ? sanitizePhoneInput(value)
+      : value
+
+    setData((prev) => ({ ...prev, [field]: nextValue }))
+
+    if (touched[field] || submitAttempted) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: validateField(field, nextValue),
+      }))
+    }
+  }
 
   const validateField = (field, value) => {
     if (
@@ -21,14 +70,33 @@ export default function S4ParentalAwareness({
     ) {
       return "Father's name is required"
     }
+
+    if (
+      isParentPhoneField(field) &&
+      value?.trim() &&
+      !isValidParentPhone(value)
+    ) {
+      return 'Use a valid phone number (e.g. 0551234567 or +233551234567)'
+    }
+
     return ''
   }
 
   const onBlurField = (field) => {
+    let value = data?.[field]
+
+    if (isParentPhoneField(field)) {
+      const normalized = normalizeParentPhone(value)
+      if (normalized !== value) {
+        setData((prev) => ({ ...prev, [field]: normalized }))
+      }
+      value = normalized
+    }
+
     setTouched((prev) => ({ ...prev, [field]: true }))
     setErrors((prev) => ({
       ...prev,
-      [field]: validateField(field, data?.[field]),
+      [field]: validateField(field, value),
     }))
   }
 
@@ -165,7 +233,14 @@ export default function S4ParentalAwareness({
             onChange={(e) =>
               handleChange('male_parent_contact', e.target.value)
             }
+            onBlur={() => onBlurField('male_parent_contact')}
+            className={fieldError('male_parent_contact') ? 'input-error' : ''}
+            inputMode='numeric'
+            placeholder='+233 5XX XXX XXX'
           />
+          {fieldError('male_parent_contact') && (
+            <p className='error-message'>{fieldError('male_parent_contact')}</p>
+          )}
         </div>
 
         <div>
@@ -403,7 +478,16 @@ export default function S4ParentalAwareness({
             onChange={(e) =>
               handleChange('female_parent_contact', e.target.value)
             }
+            onBlur={() => onBlurField('female_parent_contact')}
+            className={fieldError('female_parent_contact') ? 'input-error' : ''}
+            inputMode='numeric'
+            placeholder='+233 5XX XXX XXX'
           />
+          {fieldError('female_parent_contact') && (
+            <p className='error-message'>
+              {fieldError('female_parent_contact')}
+            </p>
+          )}
         </div>
 
         <div>

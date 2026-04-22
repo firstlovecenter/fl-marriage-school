@@ -96,7 +96,8 @@ export default function LandingPage() {
                 </h3>
                 <p className='text-sm text-gray-600'>
                   Click "Start New Registration" to begin. You'll receive a
-                  session code to resume later if needed.
+                  reference code on-screen that you can use to resume later if
+                  needed.
                 </p>
               </div>
 
@@ -193,8 +194,8 @@ export default function LandingPage() {
               />
 
               <p className='text-xs text-gray-500 mb-6 bg-gray-50 p-2 rounded'>
-                Your session code was sent to you via WhatsApp when you started
-                your registration. It looks like: FLMS-XXXX
+                Your reference code is shown throughout the registration flow
+                and again after submission. It looks like: FLMS-XXXX
               </p>
 
               <button
