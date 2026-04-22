@@ -83,7 +83,9 @@ export default function ReviewScreen({
 
         {alreadySubmitted && (
           <div className='bg-success/10 border border-success rounded-lg p-4 mb-6 text-success'>
-            <strong>Registration already submitted:</strong> This application has already been sent for review. You can still inspect the saved information below.
+            <strong>Registration already submitted:</strong> This application
+            has already been sent for review. You can still inspect the saved
+            information below.
           </div>
         )}
 

@@ -158,11 +158,7 @@ export default function FormShell() {
 
   // Determine which section to start at (once per session load).
   React.useEffect(() => {
-    if (
-      !session.loading &&
-      !showConfirmation &&
-      !hasAutoRoutedRef.current
-    ) {
+    if (!session.loading && !showConfirmation && !hasAutoRoutedRef.current) {
       if (alreadySubmitted) {
         setShowReview(false)
         setShowConfirmation(true)
