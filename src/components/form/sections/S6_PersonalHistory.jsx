@@ -10,9 +10,30 @@ export default function S6PersonalHistory({
   const [data, setData] = React.useState(formData)
   const [uploadProgress, setUploadProgress] = React.useState({})
   const [uploadError, setUploadError] = React.useState('')
+  const [errors, setErrors] = React.useState({})
+  const [touched, setTouched] = React.useState({})
+  const [submitAttempted, setSubmitAttempted] = React.useState(false)
 
   const handleChange = (field, value) =>
     setData((prev) => ({ ...prev, [field]: value }))
+
+  const validateField = (field, value) => {
+    if (
+      (field === 'male_been_married' || field === 'female_been_married') &&
+      value === undefined
+    ) {
+      return 'Please select Yes or No'
+    }
+    return ''
+  }
+
+  const onBlurField = (field) => {
+    setTouched((prev) => ({ ...prev, [field]: true }))
+    setErrors((prev) => ({ ...prev, [field]: validateField(field, data?.[field]) }))
+  }
+
+  const fieldError = (field) =>
+    touched[field] || submitAttempted ? errors[field] : ''
 
   const handleFileUpload = async (file, field, sessionId) => {
     if (!file) return
@@ -50,11 +71,24 @@ export default function S6PersonalHistory({
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    setSubmitAttempted(true)
+    const nextErrors = {
+      male_been_married: validateField('male_been_married', data?.male_been_married),
+      female_been_married: validateField('female_been_married', data?.female_been_married),
+    }
+    setErrors(nextErrors)
+    setTouched({ male_been_married: true, female_been_married: true })
+
+    if (Object.values(nextErrors).some(Boolean)) {
+      return
+    }
+
     await onNext?.(data)
   }
 
   return (
-    <form onSubmit={handleSubmit} className='space-y-8'>
+    <form onSubmit={handleSubmit} noValidate className='space-y-8'>
       <div>
         <h1 className='text-3xl font-serif font-bold mb-2'>Personal History</h1>
         <p className='section-intro'>
@@ -62,6 +96,12 @@ export default function S6PersonalHistory({
           appropriate pastoral support and guidance.
         </p>
       </div>
+
+      {submitAttempted && Object.values(errors).some(Boolean) && (
+        <div className='bg-error/10 border border-error text-error rounded-lg p-4'>
+          Please fix the highlighted fields before continuing.
+        </div>
+      )}
 
       {uploadError && (
         <div className='bg-error/10 border border-error text-error rounded-lg p-4'>
@@ -88,11 +128,16 @@ export default function S6PersonalHistory({
             onChange={(e) =>
               handleChange('male_been_married', e.target.value === 'yes')
             }
+            onBlur={() => onBlurField('male_been_married')}
+            className={fieldError('male_been_married') ? 'input-error' : ''}
           >
             <option value=''>Select...</option>
             <option value='yes'>Yes</option>
             <option value='no'>No</option>
           </select>
+          {fieldError('male_been_married') && (
+            <p className='error-message'>{fieldError('male_been_married')}</p>
+          )}
         </div>
 
         {data?.male_been_married && (
@@ -284,11 +329,16 @@ export default function S6PersonalHistory({
             onChange={(e) =>
               handleChange('female_been_married', e.target.value === 'yes')
             }
+            onBlur={() => onBlurField('female_been_married')}
+            className={fieldError('female_been_married') ? 'input-error' : ''}
           >
             <option value=''>Select...</option>
             <option value='yes'>Yes</option>
             <option value='no'>No</option>
           </select>
+          {fieldError('female_been_married') && (
+            <p className='error-message'>{fieldError('female_been_married')}</p>
+          )}
         </div>
 
         {data?.female_been_married && (

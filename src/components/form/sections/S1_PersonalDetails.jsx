@@ -50,7 +50,8 @@ export default function S1PersonalDetails({
     if (!value) return 'Date of birth is required'
 
     const date = new Date(value)
-    if (Number.isNaN(date.getTime())) return 'Please enter a valid date of birth'
+    if (Number.isNaN(date.getTime()))
+      return 'Please enter a valid date of birth'
 
     if (date > minAdultDate) {
       return 'Applicant must be at least 18 years old'
@@ -294,13 +295,13 @@ export default function S1PersonalDetails({
           <div>
             <label className='male-label'>WhatsApp Phone Number *</label>
             <input
-              type='number'
+              type='tel'
               value={localData?.male_phone || ''}
               onChange={(e) => handleInputChange('male_phone', e.target.value)}
               onBlur={() => handleBlur('male_phone')}
               className={fieldError('male_phone') ? 'input-error' : ''}
               inputMode='numeric'
-              placeholder='e.g. 0541234567'
+              placeholder='+233 5XX XXX XXX'
             />
             {fieldError('male_phone') && (
               <p className='error-message'>{fieldError('male_phone')}</p>
@@ -484,7 +485,7 @@ export default function S1PersonalDetails({
           <div>
             <label className='female-label'>WhatsApp Phone Number *</label>
             <input
-              type='number'
+              type='tel'
               value={localData?.female_phone || ''}
               onChange={(e) =>
                 handleInputChange('female_phone', e.target.value)
@@ -492,7 +493,7 @@ export default function S1PersonalDetails({
               onBlur={() => handleBlur('female_phone')}
               className={fieldError('female_phone') ? 'input-error' : ''}
               inputMode='numeric'
-              placeholder='e.g. 0551234567'
+              placeholder='+233 5XX XXX XXX'
             />
             {fieldError('female_phone') && (
               <p className='error-message'>{fieldError('female_phone')}</p>

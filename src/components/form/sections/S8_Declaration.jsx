@@ -8,6 +8,8 @@ export default function S8Declaration({ formData, onNext, onBack, isSaving }) {
   const femaleSignatureRef = useRef(null)
   const [signingProgress, setSigningProgress] = React.useState({})
   const [agreed, setAgreed] = React.useState(false)
+  const [errors, setErrors] = React.useState({})
+  const [submitAttempted, setSubmitAttempted] = React.useState(false)
 
   useEffect(() => {
     // Clear canvases on mount
@@ -17,7 +19,10 @@ export default function S8Declaration({ formData, onNext, onBack, isSaving }) {
 
   const saveSignature = async (canvasRef, field, sessionId) => {
     if (!canvasRef.current || canvasRef.current.isEmpty()) {
-      alert(`Please sign before proceeding`)
+      setErrors((prev) => ({
+        ...prev,
+        [field]: 'Please sign before saving your signature',
+      }))
       return
     }
 
@@ -40,26 +45,34 @@ export default function S8Declaration({ formData, onNext, onBack, isSaving }) {
         } = supabase.storage.from('flms-uploads').getPublicUrl(filename)
         setData((prev) => ({ ...prev, [field]: publicUrl }))
         setSigningProgress((prev) => ({ ...prev, [field]: 'done' }))
+        setErrors((prev) => ({ ...prev, [field]: '' }))
       })
     } catch (err) {
       console.error('Signature upload error:', err)
       setSigningProgress((prev) => ({ ...prev, [field]: 'error' }))
+      setErrors((prev) => ({
+        ...prev,
+        [field]: 'Failed to upload signature. Please try again.',
+      }))
     }
+  }
+
+  const validateAll = () => {
+    const nextErrors = {
+      male_signature_url: data?.male_signature_url ? '' : 'Groom must sign before continuing',
+      female_signature_url: data?.female_signature_url ? '' : 'Bride must sign before continuing',
+      agreed: agreed ? '' : 'You must agree to the declaration before continuing',
+    }
+    setErrors((prev) => ({ ...prev, ...nextErrors }))
+    return nextErrors
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!data?.male_signature_url) {
-      alert('Groom must sign')
-      return
-    }
-    if (!data?.female_signature_url) {
-      alert('Bride must sign')
-      return
-    }
-    if (!agreed) {
-      alert('You must agree to the declaration')
+    setSubmitAttempted(true)
+    const nextErrors = validateAll()
+    if (Object.values(nextErrors).some(Boolean)) {
       return
     }
 
@@ -70,7 +83,7 @@ export default function S8Declaration({ formData, onNext, onBack, isSaving }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className='space-y-8'>
+    <form onSubmit={handleSubmit} noValidate className='space-y-8'>
       <div>
         <h1 className='text-3xl font-serif font-bold mb-2'>
           Declaration & Signatures
@@ -80,6 +93,12 @@ export default function S8Declaration({ formData, onNext, onBack, isSaving }) {
           and you're ready for premarital counselling.
         </p>
       </div>
+
+      {submitAttempted && Object.values(errors).some(Boolean) && (
+        <div className='bg-error/10 border border-error text-error rounded-lg p-4'>
+          Please complete all required declaration steps before continuing.
+        </div>
+      )}
 
       {/* Declaration Text */}
       <div className='section'>
@@ -171,6 +190,9 @@ export default function S8Declaration({ formData, onNext, onBack, isSaving }) {
             {!signingProgress.male_signature_url && 'Save Signature'}
           </button>
         </div>
+        {errors.male_signature_url && (
+          <p className='error-message'>{errors.male_signature_url}</p>
+        )}
       </div>
 
       {/* Female Signature */}
@@ -228,6 +250,9 @@ export default function S8Declaration({ formData, onNext, onBack, isSaving }) {
             {!signingProgress.female_signature_url && 'Save Signature'}
           </button>
         </div>
+        {errors.female_signature_url && (
+          <p className='error-message'>{errors.female_signature_url}</p>
+        )}
       </div>
 
       {/* Agreement Checkbox */}
@@ -236,7 +261,12 @@ export default function S8Declaration({ formData, onNext, onBack, isSaving }) {
           <input
             type='checkbox'
             checked={agreed}
-            onChange={(e) => setAgreed(e.target.checked)}
+            onChange={(e) => {
+              setAgreed(e.target.checked)
+              if (e.target.checked) {
+                setErrors((prev) => ({ ...prev, agreed: '' }))
+              }
+            }}
             className='mt-1'
           />
           <span className='text-sm'>
@@ -245,6 +275,7 @@ export default function S8Declaration({ formData, onNext, onBack, isSaving }) {
             presence of each other.
           </span>
         </label>
+        {errors.agreed && <p className='error-message mt-2'>{errors.agreed}</p>}
       </div>
 
       {/* Signature Status */}

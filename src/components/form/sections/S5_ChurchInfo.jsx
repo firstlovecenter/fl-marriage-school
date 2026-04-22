@@ -2,26 +2,71 @@ import React from 'react'
 
 export default function S5ChurchInfo({ formData, onNext, onBack, isSaving }) {
   const [data, setData] = React.useState(formData)
+  const [errors, setErrors] = React.useState({})
+  const [touched, setTouched] = React.useState({})
+  const [submitAttempted, setSubmitAttempted] = React.useState(false)
 
   const handleChange = (field, value) =>
     setData((prev) => ({ ...prev, [field]: value }))
 
+  const validateField = (field, value) => {
+    const requiredFields = [
+      'male_church_name',
+      'female_church_name',
+      'male_pastor_name',
+      'female_pastor_name',
+      'male_pastor_phone',
+      'female_pastor_phone',
+    ]
+    if (requiredFields.includes(field) && !value?.trim()) {
+      return 'This field is required'
+    }
+    return ''
+  }
+
+  const onBlurField = (field) => {
+    setTouched((prev) => ({ ...prev, [field]: true }))
+    setErrors((prev) => ({ ...prev, [field]: validateField(field, data?.[field]) }))
+  }
+
+  const fieldError = (field) =>
+    touched[field] || submitAttempted ? errors[field] : ''
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const errors = []
-    if (!data?.male_church_name?.trim()) errors.push('Male church name')
-    if (!data?.female_church_name?.trim()) errors.push('Female church name')
-    if (!data?.male_pastor_name?.trim()) errors.push('Male pastor name')
-    if (!data?.female_pastor_name?.trim()) errors.push('Female pastor name')
-    if (errors.length > 0) {
-      alert(`Please fill in: ${errors.join(', ')}`)
+
+    setSubmitAttempted(true)
+    const requiredFields = [
+      'male_church_name',
+      'female_church_name',
+      'male_pastor_name',
+      'female_pastor_name',
+      'male_pastor_phone',
+      'female_pastor_phone',
+    ]
+    const nextErrors = {}
+    requiredFields.forEach((field) => {
+      const message = validateField(field, data?.[field])
+      if (message) nextErrors[field] = message
+    })
+    setErrors(nextErrors)
+    setTouched((prev) => {
+      const touchedMap = { ...prev }
+      requiredFields.forEach((field) => {
+        touchedMap[field] = true
+      })
+      return touchedMap
+    })
+
+    if (Object.keys(nextErrors).length > 0) {
       return
     }
+
     await onNext?.(data)
   }
 
   return (
-    <form onSubmit={handleSubmit} className='space-y-8'>
+    <form onSubmit={handleSubmit} noValidate className='space-y-8'>
       <div>
         <h1 className='text-3xl font-serif font-bold mb-2'>
           Church Information
@@ -31,6 +76,12 @@ export default function S5ChurchInfo({ formData, onNext, onBack, isSaving }) {
           Make sure the information is correct.
         </p>
       </div>
+
+      {submitAttempted && Object.values(errors).some(Boolean) && (
+        <div className='bg-error/10 border border-error text-error rounded-lg p-4'>
+          Please fix the highlighted fields before continuing.
+        </div>
+      )}
 
       {/* Male */}
       <div className='male-section rounded-lg p-6 space-y-4'>
@@ -44,8 +95,13 @@ export default function S5ChurchInfo({ formData, onNext, onBack, isSaving }) {
             type='text'
             value={data?.male_church_name || ''}
             onChange={(e) => handleChange('male_church_name', e.target.value)}
+            onBlur={() => onBlurField('male_church_name')}
+            className={fieldError('male_church_name') ? 'input-error' : ''}
             placeholder='Name of your church'
           />
+          {fieldError('male_church_name') && (
+            <p className='error-message'>{fieldError('male_church_name')}</p>
+          )}
         </div>
 
         <div className='form-grid'>
@@ -55,8 +111,13 @@ export default function S5ChurchInfo({ formData, onNext, onBack, isSaving }) {
               type='text'
               value={data?.male_pastor_name || ''}
               onChange={(e) => handleChange('male_pastor_name', e.target.value)}
+              onBlur={() => onBlurField('male_pastor_name')}
+              className={fieldError('male_pastor_name') ? 'input-error' : ''}
               placeholder='Full name of your pastor'
             />
+            {fieldError('male_pastor_name') && (
+              <p className='error-message'>{fieldError('male_pastor_name')}</p>
+            )}
           </div>
 
           <div>
@@ -67,8 +128,13 @@ export default function S5ChurchInfo({ formData, onNext, onBack, isSaving }) {
               onChange={(e) =>
                 handleChange('male_pastor_phone', e.target.value)
               }
+              onBlur={() => onBlurField('male_pastor_phone')}
+              className={fieldError('male_pastor_phone') ? 'input-error' : ''}
               placeholder='+233 5XX XXX XXX'
             />
+            {fieldError('male_pastor_phone') && (
+              <p className='error-message'>{fieldError('male_pastor_phone')}</p>
+            )}
           </div>
         </div>
 
@@ -173,8 +239,13 @@ export default function S5ChurchInfo({ formData, onNext, onBack, isSaving }) {
             type='text'
             value={data?.female_church_name || ''}
             onChange={(e) => handleChange('female_church_name', e.target.value)}
+            onBlur={() => onBlurField('female_church_name')}
+            className={fieldError('female_church_name') ? 'input-error' : ''}
             placeholder='Name of your church'
           />
+          {fieldError('female_church_name') && (
+            <p className='error-message'>{fieldError('female_church_name')}</p>
+          )}
         </div>
 
         <div className='form-grid'>
@@ -186,8 +257,13 @@ export default function S5ChurchInfo({ formData, onNext, onBack, isSaving }) {
               onChange={(e) =>
                 handleChange('female_pastor_name', e.target.value)
               }
+              onBlur={() => onBlurField('female_pastor_name')}
+              className={fieldError('female_pastor_name') ? 'input-error' : ''}
               placeholder='Full name of your pastor'
             />
+            {fieldError('female_pastor_name') && (
+              <p className='error-message'>{fieldError('female_pastor_name')}</p>
+            )}
           </div>
 
           <div>
@@ -198,8 +274,13 @@ export default function S5ChurchInfo({ formData, onNext, onBack, isSaving }) {
               onChange={(e) =>
                 handleChange('female_pastor_phone', e.target.value)
               }
+              onBlur={() => onBlurField('female_pastor_phone')}
+              className={fieldError('female_pastor_phone') ? 'input-error' : ''}
               placeholder='+233 5XX XXX XXX'
             />
+            {fieldError('female_pastor_phone') && (
+              <p className='error-message'>{fieldError('female_pastor_phone')}</p>
+            )}
           </div>
         </div>
 

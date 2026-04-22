@@ -2,25 +2,51 @@ import React from 'react'
 
 export default function S3Education({ formData, onNext, onBack, isSaving }) {
   const [data, setData] = React.useState(formData)
+  const [errors, setErrors] = React.useState({})
+  const [touched, setTouched] = React.useState({})
+  const [submitAttempted, setSubmitAttempted] = React.useState(false)
 
   const handleChange = (field, value) =>
     setData((prev) => ({ ...prev, [field]: value }))
 
+  const validateField = (field, value) => {
+    if (
+      (field === 'male_education_level' || field === 'female_education_level') &&
+      !value?.trim()
+    ) {
+      return 'Please select an education level'
+    }
+    return ''
+  }
+
+  const onBlurField = (field) => {
+    setTouched((prev) => ({ ...prev, [field]: true }))
+    setErrors((prev) => ({ ...prev, [field]: validateField(field, data?.[field]) }))
+  }
+
+  const fieldError = (field) =>
+    touched[field] || submitAttempted ? errors[field] : ''
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const errors = []
-    if (!data?.male_education_level?.trim()) errors.push('Male education level')
-    if (!data?.female_education_level?.trim())
-      errors.push('Female education level')
-    if (errors.length > 0) {
-      alert(`Please fill in: ${errors.join(', ')}`)
+
+    setSubmitAttempted(true)
+    const nextErrors = {
+      male_education_level: validateField('male_education_level', data?.male_education_level),
+      female_education_level: validateField('female_education_level', data?.female_education_level),
+    }
+    setErrors(nextErrors)
+    setTouched({ male_education_level: true, female_education_level: true })
+
+    if (Object.values(nextErrors).some(Boolean)) {
       return
     }
+
     await onNext?.(data)
   }
 
   return (
-    <form onSubmit={handleSubmit} className='space-y-8'>
+    <form onSubmit={handleSubmit} noValidate className='space-y-8'>
       <div>
         <h1 className='text-3xl font-serif font-bold mb-2'>
           Educational & Work Background
@@ -30,6 +56,12 @@ export default function S3Education({ formData, onNext, onBack, isSaving }) {
           aspirations and life goals as a couple.
         </p>
       </div>
+
+      {submitAttempted && Object.values(errors).some(Boolean) && (
+        <div className='bg-error/10 border border-error text-error rounded-lg p-4'>
+          Please fix the highlighted fields before continuing.
+        </div>
+      )}
 
       {/* Male */}
       <div className='male-section rounded-lg p-6 space-y-4'>
@@ -44,6 +76,8 @@ export default function S3Education({ formData, onNext, onBack, isSaving }) {
             onChange={(e) =>
               handleChange('male_education_level', e.target.value)
             }
+            onBlur={() => onBlurField('male_education_level')}
+            className={fieldError('male_education_level') ? 'input-error' : ''}
           >
             <option value=''>Select...</option>
             <option value='Primary'>Primary</option>
@@ -52,6 +86,9 @@ export default function S3Education({ formData, onNext, onBack, isSaving }) {
             <option value='University'>University Degree</option>
             <option value='Postgraduate'>Postgraduate</option>
           </select>
+          {fieldError('male_education_level') && (
+            <p className='error-message'>{fieldError('male_education_level')}</p>
+          )}
         </div>
 
         <div>
@@ -121,6 +158,8 @@ export default function S3Education({ formData, onNext, onBack, isSaving }) {
             onChange={(e) =>
               handleChange('female_education_level', e.target.value)
             }
+            onBlur={() => onBlurField('female_education_level')}
+            className={fieldError('female_education_level') ? 'input-error' : ''}
           >
             <option value=''>Select...</option>
             <option value='Primary'>Primary</option>
@@ -129,6 +168,9 @@ export default function S3Education({ formData, onNext, onBack, isSaving }) {
             <option value='University'>University Degree</option>
             <option value='Postgraduate'>Postgraduate</option>
           </select>
+          {fieldError('female_education_level') && (
+            <p className='error-message'>{fieldError('female_education_level')}</p>
+          )}
         </div>
 
         <div>

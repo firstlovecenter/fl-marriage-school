@@ -7,24 +7,51 @@ export default function S4ParentalAwareness({
   isSaving,
 }) {
   const [data, setData] = React.useState(formData)
+  const [errors, setErrors] = React.useState({})
+  const [touched, setTouched] = React.useState({})
+  const [submitAttempted, setSubmitAttempted] = React.useState(false)
 
   const handleChange = (field, value) =>
     setData((prev) => ({ ...prev, [field]: value }))
 
+  const validateField = (field, value) => {
+    if (
+      (field === 'male_father_name' || field === 'female_father_name') &&
+      !value?.trim()
+    ) {
+      return "Father's name is required"
+    }
+    return ''
+  }
+
+  const onBlurField = (field) => {
+    setTouched((prev) => ({ ...prev, [field]: true }))
+    setErrors((prev) => ({ ...prev, [field]: validateField(field, data?.[field]) }))
+  }
+
+  const fieldError = (field) =>
+    touched[field] || submitAttempted ? errors[field] : ''
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const errors = []
-    if (!data?.male_father_name?.trim()) errors.push('Male father name')
-    if (!data?.female_father_name?.trim()) errors.push('Female father name')
-    if (errors.length > 0) {
-      alert(`Please fill in: ${errors.join(', ')}`)
+
+    setSubmitAttempted(true)
+    const nextErrors = {
+      male_father_name: validateField('male_father_name', data?.male_father_name),
+      female_father_name: validateField('female_father_name', data?.female_father_name),
+    }
+    setErrors(nextErrors)
+    setTouched({ male_father_name: true, female_father_name: true })
+
+    if (Object.values(nextErrors).some(Boolean)) {
       return
     }
+
     await onNext?.(data)
   }
 
   return (
-    <form onSubmit={handleSubmit} className='space-y-8'>
+    <form onSubmit={handleSubmit} noValidate className='space-y-8'>
       <div>
         <h1 className='text-3xl font-serif font-bold mb-2'>
           Parental Awareness & Family Background
@@ -34,6 +61,12 @@ export default function S4ParentalAwareness({
           appropriate for your unique situation.
         </p>
       </div>
+
+      {submitAttempted && Object.values(errors).some(Boolean) && (
+        <div className='bg-error/10 border border-error text-error rounded-lg p-4'>
+          Please fix the highlighted fields before continuing.
+        </div>
+      )}
 
       {/* Male */}
       <div className='male-section rounded-lg p-6 space-y-4'>
@@ -48,7 +81,12 @@ export default function S4ParentalAwareness({
               type='text'
               value={data?.male_father_name || ''}
               onChange={(e) => handleChange('male_father_name', e.target.value)}
+              onBlur={() => onBlurField('male_father_name')}
+              className={fieldError('male_father_name') ? 'input-error' : ''}
             />
+            {fieldError('male_father_name') && (
+              <p className='error-message'>{fieldError('male_father_name')}</p>
+            )}
           </div>
 
           <div>
@@ -274,7 +312,12 @@ export default function S4ParentalAwareness({
               onChange={(e) =>
                 handleChange('female_father_name', e.target.value)
               }
+              onBlur={() => onBlurField('female_father_name')}
+              className={fieldError('female_father_name') ? 'input-error' : ''}
             />
+            {fieldError('female_father_name') && (
+              <p className='error-message'>{fieldError('female_father_name')}</p>
+            )}
           </div>
 
           <div>
