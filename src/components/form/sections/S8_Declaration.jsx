@@ -59,9 +59,15 @@ export default function S8Declaration({ formData, onNext, onBack, isSaving }) {
 
   const validateAll = () => {
     const nextErrors = {
-      male_signature_url: data?.male_signature_url ? '' : 'Groom must sign before continuing',
-      female_signature_url: data?.female_signature_url ? '' : 'Bride must sign before continuing',
-      agreed: agreed ? '' : 'You must agree to the declaration before continuing',
+      male_signature_url: data?.male_signature_url
+        ? ''
+        : 'Groom must sign before continuing',
+      female_signature_url: data?.female_signature_url
+        ? ''
+        : 'Bride must sign before continuing',
+      agreed: agreed
+        ? ''
+        : 'You must agree to the declaration before continuing',
     }
     setErrors((prev) => ({ ...prev, ...nextErrors }))
     return nextErrors

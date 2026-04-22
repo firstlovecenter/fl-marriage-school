@@ -29,7 +29,10 @@ export default function S6PersonalHistory({
 
   const onBlurField = (field) => {
     setTouched((prev) => ({ ...prev, [field]: true }))
-    setErrors((prev) => ({ ...prev, [field]: validateField(field, data?.[field]) }))
+    setErrors((prev) => ({
+      ...prev,
+      [field]: validateField(field, data?.[field]),
+    }))
   }
 
   const fieldError = (field) =>
@@ -74,8 +77,14 @@ export default function S6PersonalHistory({
 
     setSubmitAttempted(true)
     const nextErrors = {
-      male_been_married: validateField('male_been_married', data?.male_been_married),
-      female_been_married: validateField('female_been_married', data?.female_been_married),
+      male_been_married: validateField(
+        'male_been_married',
+        data?.male_been_married,
+      ),
+      female_been_married: validateField(
+        'female_been_married',
+        data?.female_been_married,
+      ),
     }
     setErrors(nextErrors)
     setTouched({ male_been_married: true, female_been_married: true })

@@ -11,7 +11,8 @@ export default function S3Education({ formData, onNext, onBack, isSaving }) {
 
   const validateField = (field, value) => {
     if (
-      (field === 'male_education_level' || field === 'female_education_level') &&
+      (field === 'male_education_level' ||
+        field === 'female_education_level') &&
       !value?.trim()
     ) {
       return 'Please select an education level'
@@ -21,7 +22,10 @@ export default function S3Education({ formData, onNext, onBack, isSaving }) {
 
   const onBlurField = (field) => {
     setTouched((prev) => ({ ...prev, [field]: true }))
-    setErrors((prev) => ({ ...prev, [field]: validateField(field, data?.[field]) }))
+    setErrors((prev) => ({
+      ...prev,
+      [field]: validateField(field, data?.[field]),
+    }))
   }
 
   const fieldError = (field) =>
@@ -32,8 +36,14 @@ export default function S3Education({ formData, onNext, onBack, isSaving }) {
 
     setSubmitAttempted(true)
     const nextErrors = {
-      male_education_level: validateField('male_education_level', data?.male_education_level),
-      female_education_level: validateField('female_education_level', data?.female_education_level),
+      male_education_level: validateField(
+        'male_education_level',
+        data?.male_education_level,
+      ),
+      female_education_level: validateField(
+        'female_education_level',
+        data?.female_education_level,
+      ),
     }
     setErrors(nextErrors)
     setTouched({ male_education_level: true, female_education_level: true })
@@ -87,7 +97,9 @@ export default function S3Education({ formData, onNext, onBack, isSaving }) {
             <option value='Postgraduate'>Postgraduate</option>
           </select>
           {fieldError('male_education_level') && (
-            <p className='error-message'>{fieldError('male_education_level')}</p>
+            <p className='error-message'>
+              {fieldError('male_education_level')}
+            </p>
           )}
         </div>
 
@@ -159,7 +171,9 @@ export default function S3Education({ formData, onNext, onBack, isSaving }) {
               handleChange('female_education_level', e.target.value)
             }
             onBlur={() => onBlurField('female_education_level')}
-            className={fieldError('female_education_level') ? 'input-error' : ''}
+            className={
+              fieldError('female_education_level') ? 'input-error' : ''
+            }
           >
             <option value=''>Select...</option>
             <option value='Primary'>Primary</option>
@@ -169,7 +183,9 @@ export default function S3Education({ formData, onNext, onBack, isSaving }) {
             <option value='Postgraduate'>Postgraduate</option>
           </select>
           {fieldError('female_education_level') && (
-            <p className='error-message'>{fieldError('female_education_level')}</p>
+            <p className='error-message'>
+              {fieldError('female_education_level')}
+            </p>
           )}
         </div>
 

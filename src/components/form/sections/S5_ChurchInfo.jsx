@@ -26,7 +26,10 @@ export default function S5ChurchInfo({ formData, onNext, onBack, isSaving }) {
 
   const onBlurField = (field) => {
     setTouched((prev) => ({ ...prev, [field]: true }))
-    setErrors((prev) => ({ ...prev, [field]: validateField(field, data?.[field]) }))
+    setErrors((prev) => ({
+      ...prev,
+      [field]: validateField(field, data?.[field]),
+    }))
   }
 
   const fieldError = (field) =>
@@ -262,7 +265,9 @@ export default function S5ChurchInfo({ formData, onNext, onBack, isSaving }) {
               placeholder='Full name of your pastor'
             />
             {fieldError('female_pastor_name') && (
-              <p className='error-message'>{fieldError('female_pastor_name')}</p>
+              <p className='error-message'>
+                {fieldError('female_pastor_name')}
+              </p>
             )}
           </div>
 
@@ -279,7 +284,9 @@ export default function S5ChurchInfo({ formData, onNext, onBack, isSaving }) {
               placeholder='+233 5XX XXX XXX'
             />
             {fieldError('female_pastor_phone') && (
-              <p className='error-message'>{fieldError('female_pastor_phone')}</p>
+              <p className='error-message'>
+                {fieldError('female_pastor_phone')}
+              </p>
             )}
           </div>
         </div>

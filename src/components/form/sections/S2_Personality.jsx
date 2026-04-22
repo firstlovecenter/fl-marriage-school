@@ -21,7 +21,10 @@ export default function S2Personality({ formData, onNext, onBack, isSaving }) {
 
   const onBlurField = (field) => {
     setTouched((prev) => ({ ...prev, [field]: true }))
-    setErrors((prev) => ({ ...prev, [field]: validateField(field, data?.[field]) }))
+    setErrors((prev) => ({
+      ...prev,
+      [field]: validateField(field, data?.[field]),
+    }))
   }
 
   const fieldError = (field) =>
@@ -32,8 +35,14 @@ export default function S2Personality({ formData, onNext, onBack, isSaving }) {
 
     setSubmitAttempted(true)
     const nextErrors = {
-      male_temperament: validateField('male_temperament', data?.male_temperament),
-      female_temperament: validateField('female_temperament', data?.female_temperament),
+      male_temperament: validateField(
+        'male_temperament',
+        data?.male_temperament,
+      ),
+      female_temperament: validateField(
+        'female_temperament',
+        data?.female_temperament,
+      ),
     }
     setErrors(nextErrors)
     setTouched({ male_temperament: true, female_temperament: true })

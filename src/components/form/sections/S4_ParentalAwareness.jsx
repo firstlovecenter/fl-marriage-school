@@ -26,7 +26,10 @@ export default function S4ParentalAwareness({
 
   const onBlurField = (field) => {
     setTouched((prev) => ({ ...prev, [field]: true }))
-    setErrors((prev) => ({ ...prev, [field]: validateField(field, data?.[field]) }))
+    setErrors((prev) => ({
+      ...prev,
+      [field]: validateField(field, data?.[field]),
+    }))
   }
 
   const fieldError = (field) =>
@@ -37,8 +40,14 @@ export default function S4ParentalAwareness({
 
     setSubmitAttempted(true)
     const nextErrors = {
-      male_father_name: validateField('male_father_name', data?.male_father_name),
-      female_father_name: validateField('female_father_name', data?.female_father_name),
+      male_father_name: validateField(
+        'male_father_name',
+        data?.male_father_name,
+      ),
+      female_father_name: validateField(
+        'female_father_name',
+        data?.female_father_name,
+      ),
     }
     setErrors(nextErrors)
     setTouched({ male_father_name: true, female_father_name: true })
@@ -316,7 +325,9 @@ export default function S4ParentalAwareness({
               className={fieldError('female_father_name') ? 'input-error' : ''}
             />
             {fieldError('female_father_name') && (
-              <p className='error-message'>{fieldError('female_father_name')}</p>
+              <p className='error-message'>
+                {fieldError('female_father_name')}
+              </p>
             )}
           </div>
 
