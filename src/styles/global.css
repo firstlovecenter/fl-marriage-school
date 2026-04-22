@@ -1,0 +1,189 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  @apply selection:bg-gold selection:text-cream;
+}
+
+html {
+  @apply scroll-smooth;
+}
+
+body {
+  @apply bg-cream text-deep font-sans;
+}
+
+/* Typography */
+h1 {
+  @apply font-serif text-4xl font-bold;
+}
+
+h2 {
+  @apply font-serif text-2xl font-semibold;
+}
+
+h3 {
+  @apply font-serif text-lg font-semibold;
+}
+
+p {
+  @apply leading-relaxed;
+}
+
+/* Form elements */
+input[type='text'],
+input[type='email'],
+input[type='date'],
+input[type='tel'],
+select,
+textarea {
+  @apply w-full px-4 py-2 border-2 border-deep rounded-md font-sans focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold focus:ring-opacity-20 transition;
+}
+
+textarea {
+  @apply resize-y min-h-[120px];
+}
+
+label {
+  @apply block text-sm font-semibold mb-2;
+}
+
+/* Male partner styling */
+.male-section {
+  @apply bg-male-bg border-l-4 border-male-accent;
+}
+
+.male-label {
+  @apply text-male-accent;
+}
+
+.male-button {
+  @apply bg-male-accent text-cream hover:bg-male-accent/90 transition;
+}
+
+/* Female partner styling */
+.female-section {
+  @apply bg-female-bg border-l-4 border-female-accent;
+}
+
+.female-label {
+  @apply text-female-accent;
+}
+
+.female-button {
+  @apply bg-female-accent text-cream hover:bg-female-accent/90 transition;
+}
+
+/* Buttons */
+.btn {
+  @apply px-6 py-3 rounded-lg font-semibold transition duration-200;
+}
+
+.btn-primary {
+  @apply bg-gold text-cream hover:bg-gold/90;
+}
+
+.btn-secondary {
+  @apply bg-gray-300 text-deep hover:bg-gray-400;
+}
+
+.btn-success {
+  @apply bg-success text-cream hover:bg-success/90;
+}
+
+.btn-error {
+  @apply bg-error text-cream hover:bg-error/90;
+}
+
+.btn-sm {
+  @apply px-3 py-1 text-sm;
+}
+
+/* Sections */
+.section {
+  @apply bg-white rounded-lg shadow-sm p-6 mb-4;
+}
+
+.section-intro {
+  @apply text-gray-600 italic mb-6 pb-4 border-b border-gray-200;
+}
+
+/* Progress indicators */
+.progress-item {
+  @apply flex items-center space-x-3 py-3 px-4 rounded-lg transition;
+}
+
+.progress-item.incomplete {
+  @apply text-gray-400;
+}
+
+.progress-item.in-progress {
+  @apply text-gold bg-gold/10;
+}
+
+.progress-item.complete {
+  @apply text-success;
+}
+
+.progress-icon {
+  @apply w-6 h-6 flex items-center justify-center;
+}
+
+/* Form grid */
+.form-grid {
+  @apply grid gap-4;
+}
+
+.form-grid-2 {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+}
+
+/* Error states */
+.input-error {
+  @apply border-error focus:border-error focus:ring-error;
+}
+
+.error-message {
+  @apply text-error text-sm font-medium mt-1;
+}
+
+/* Upload area */
+.upload-area {
+  @apply border-2 border-dashed border-gold rounded-lg p-6 text-center cursor-pointer transition hover:bg-gold/5;
+}
+
+.upload-area.active {
+  @apply bg-gold/10;
+}
+
+/* Loading state */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  h1 {
+    @apply text-2xl;
+  }
+
+  h2 {
+    @apply text-xl;
+  }
+
+  .form-grid-2 {
+    @apply grid-cols-1;
+  }
+}
