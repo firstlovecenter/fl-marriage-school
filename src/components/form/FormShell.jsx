@@ -4,6 +4,7 @@ import { useFormSession } from '../../hooks/useFormSession'
 import { getLastCompletedSection } from '../../lib/session'
 import { supabase } from '../../lib/supabase'
 import { sendSmsMessage } from '../../lib/mnotify'
+import { sendEmailNotification } from '../../lib/emailNotifications'
 import { syncToGoogleSheets } from '../../lib/sheets'
 
 // Section components (we'll create these next)
@@ -53,6 +54,21 @@ export default function FormShell() {
       .join(' & ')
 
   const referenceCode = session.sessionCode || 'Loading...'
+
+  const getStartNotificationFlagKey = () =>
+    sessionId ? `flms_start_notified_${sessionId}` : ''
+
+  const hasSentStartNotification = () => {
+    const key = getStartNotificationFlagKey()
+    return key ? localStorage.getItem(key) === '1' : false
+  }
+
+  const markStartNotificationSent = () => {
+    const key = getStartNotificationFlagKey()
+    if (key) {
+      localStorage.setItem(key, '1')
+    }
+  }
 
   const upsertPastorRecommendations = async () => {
     const { data: existingRecommendations, error: existingError } =
@@ -117,7 +133,7 @@ export default function FormShell() {
     const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin
     const coupleName = getCoupleName()
 
-    const tasks = recommendations
+    const smsTasks = recommendations
       .filter((recommendation) => recommendation.pastor_phone)
       .map((recommendation) => {
         const pastorName = recommendation.pastor_name || 'Pastor'
@@ -129,7 +145,21 @@ export default function FormShell() {
         })
       })
 
-    return Promise.allSettled(tasks)
+    const emailTasks = recommendations
+      .filter((recommendation) => recommendation.pastor_email)
+      .map((recommendation) => {
+        const pastorName = recommendation.pastor_name || 'Pastor'
+        const link = `${baseUrl}/pastor/${recommendation.token}`
+
+        return sendEmailNotification({
+          to: recommendation.pastor_email,
+          subject: 'FLMS Pastoral Recommendation Request',
+          text: `Dear ${pastorName}, ${coupleName} have registered for premarital counselling at First Love Marriage School and listed you as a recommending pastor. Kindly complete your pastoral recommendation here: ${link}`,
+          html: `<p>Dear ${pastorName},</p><p>${coupleName} have registered for premarital counselling at First Love Marriage School and listed you as a recommending pastor.</p><p>Please complete your pastoral recommendation here:</p><p><a href="${link}">${link}</a></p>`,
+        })
+      })
+
+    return Promise.allSettled([...smsTasks, ...emailTasks])
   }
 
   const sendCoupleNotifications = async () => {
@@ -149,6 +179,56 @@ export default function FormShell() {
     ].filter(Boolean)
 
     return Promise.allSettled(tasks)
+  }
+
+  const sendStartNotifications = async (sectionData) => {
+    if (!session.sessionCode) return false
+
+    const maleName =
+      sectionData?.male_name || registration?.male_name || 'there'
+    const femaleName =
+      sectionData?.female_name || registration?.female_name || 'there'
+    const malePhone = sectionData?.male_phone || registration?.male_phone
+    const femalePhone = sectionData?.female_phone || registration?.female_phone
+    const maleEmail = sectionData?.male_email || registration?.male_email
+    const femaleEmail = sectionData?.female_email || registration?.female_email
+
+    const smsTasks = [
+      malePhone
+        ? sendSmsMessage({
+            to: malePhone,
+            message: `Hi ${maleName}, your FLMS registration has started. Your reference code is ${session.sessionCode}. We'll send important updates by SMS to this number.`,
+          })
+        : null,
+      femalePhone
+        ? sendSmsMessage({
+            to: femalePhone,
+            message: `Hi ${femaleName}, your FLMS registration has started. Your reference code is ${session.sessionCode}. We'll send important updates by SMS to this number.`,
+          })
+        : null,
+    ].filter(Boolean)
+
+    const emailTasks = [
+      maleEmail
+        ? sendEmailNotification({
+            to: maleEmail,
+            subject: 'FLMS Registration Started',
+            text: `Hi ${maleName}, your First Love Marriage School registration has started. Your reference code is ${session.sessionCode}. Keep this code to resume your form anytime.`,
+            html: `<p>Hi ${maleName},</p><p>Your First Love Marriage School registration has started.</p><p><strong>Reference code:</strong> ${session.sessionCode}</p><p>Keep this code to resume your form anytime.</p>`,
+          })
+        : null,
+      femaleEmail
+        ? sendEmailNotification({
+            to: femaleEmail,
+            subject: 'FLMS Registration Started',
+            text: `Hi ${femaleName}, your First Love Marriage School registration has started. Your reference code is ${session.sessionCode}. Keep this code to resume your form anytime.`,
+            html: `<p>Hi ${femaleName},</p><p>Your First Love Marriage School registration has started.</p><p><strong>Reference code:</strong> ${session.sessionCode}</p><p>Keep this code to resume your form anytime.</p>`,
+          })
+        : null,
+    ].filter(Boolean)
+
+    await Promise.allSettled([...smsTasks, ...emailTasks])
+    return true
   }
 
   // Reset one-time auto-routing when the session changes.
@@ -195,9 +275,22 @@ export default function FormShell() {
       } else {
         // Move to next section
         setCurrentSection(currentSection + 1)
+
+        if (currentSection === 1 && !hasSentStartNotification()) {
+          void sendStartNotifications(sectionData)
+            .then((didAttempt) => {
+              if (didAttempt) {
+                markStartNotificationSent()
+              }
+            })
+            .catch((error) => {
+              console.error('Start notification failed:', error)
+              markStartNotificationSent()
+            })
+        }
       }
     },
-    [currentSection, session],
+    [currentSection, registration, session, sessionId],
   )
 
   const handleBack = useCallback(() => {

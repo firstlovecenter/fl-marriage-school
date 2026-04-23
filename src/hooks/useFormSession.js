@@ -35,7 +35,7 @@ export function useFormSession(sessionId) {
 
       const { data: sessionRow, error: sessionError } = await supabase
         .from('sessions')
-        .select('session_code')
+        .select('session_code,status')
         .eq('id', sessionId)
         .single()
 

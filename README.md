@@ -42,14 +42,25 @@ A full-stack web application for premarital counselling registration, pastoral r
    - Status
    - [All other registration fields...]
 
-### 3. Arkesel SMS/WhatsApp Setup
+### 3. MNotify SMS Setup
 
-1. Sign up for Arkesel: https://dashboard.arkesel.com
+1. Sign up for MNotify: https://mnotify.com
 2. Get your API key from the dashboard
 3. Register your sender ID "FLMS" (or custom)
-4. Optionally set up WhatsApp Business API integration
 
-### 4. Local Development
+### 4. SMTP Email Setup (Optional but Recommended)
+
+1. Use your SMTP provider details (e.g., Google Workspace/Gmail SMTP)
+2. Set SMTP environment variables in Vercel/local env:
+   - `SMTP_HOST`
+   - `SMTP_PORT`
+   - `SMTP_SECURE`
+   - `SMTP_USER`
+   - `SMTP_PASS`
+   - `SMTP_FROM`
+3. The app will send pastor recommendation links and start-notification emails via `/api/notifications/email`
+
+### 5. Local Development
 
 ```bash
 # Install dependencies
@@ -60,9 +71,10 @@ cp .env.local.example .env.local
 
 # Add your credentials:
 # - VITE_SUPABASE_URL
-# - VITE_SUPABASE_ANON_KEY
-# - VITE_ARKESEL_API_KEY
-# - VITE_ARKESEL_SENDER_ID
+# - VITE_SUPABASE_PUBLISHABLE_KEY (or VITE_SUPABASE_ANON_KEY)
+# - VITE_MNOTIFY_API_KEY
+# - VITE_MNOTIFY_SENDER_ID
+# - SMTP_HOST / SMTP_USER / SMTP_PASS (for email notifications)
 # - GOOGLE_SHEETS_SPREADSHEET_ID (optional)
 # - etc.
 
@@ -72,7 +84,7 @@ npm run dev
 
 The app will open at http://localhost:5173
 
-### 5. Deployment to Vercel
+### 6. Deployment to Vercel
 
 ```bash
 # Install Vercel CLI
@@ -104,7 +116,8 @@ src/
 │       └── CoupleDetail.jsx
 ├── lib/
 │   ├── supabase.js               # Supabase client
-│   ├── arkesel.js                # SMS/WhatsApp
+│   ├── mnotify.js                # SMS notifications
+│   ├── emailNotifications.js     # Email notification client helper
 │   ├── sheets.js                 # Google Sheets sync
 │   └── session.js                # Session management
 ├── hooks/
@@ -129,7 +142,8 @@ supabase/
 - ✅ File uploads (photos, documents)
 - ✅ Signature capture (canvas-based)
 - ✅ Pastoral recommendation links (token-based)
-- ✅ WhatsApp/SMS notifications (Arkesel)
+- ✅ SMS notifications (MNotify)
+- ✅ Email notifications (SMTP via Vercel serverless route)
 - ✅ Admin dashboard with couple management
 - ✅ Google Sheets sync
 - ✅ 14-day session expiry with day-10 reminders
@@ -159,7 +173,7 @@ This project follows a specific build order for development:
 - **Styling**: Tailwind CSS
 - **Database**: Supabase (PostgreSQL)
 - **Storage**: Supabase Storage
-- **Notifications**: Arkesel API (SMS/WhatsApp)
+- **Notifications**: MNotify API (SMS) + SMTP (Email)
 - **Data Sync**: Google Sheets API v4
 - **Signatures**: react-signature-canvas
 - **Deployment**: Vercel
@@ -181,15 +195,25 @@ Error: Red (#9B3A2A)
 ```env
 # Supabase
 VITE_SUPABASE_URL=
+VITE_SUPABASE_PUBLISHABLE_KEY=
+# Optional fallback:
 VITE_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 
 # App
 VITE_APP_URL=http://localhost:5173
 
-# Arkesel
-VITE_ARKESEL_API_KEY=
-VITE_ARKESEL_SENDER_ID=FLMS
+# MNotify
+VITE_MNOTIFY_API_KEY=
+VITE_MNOTIFY_SENDER_ID=FLMS
+
+# SMTP (for /api/notifications/email)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=
 
 # Google Sheets
 GOOGLE_SHEETS_SPREADSHEET_ID=

@@ -35,12 +35,12 @@ export default function S1PersonalDetails({
 
   const validatePhone = (value) => {
     if (value === null || value === undefined || String(value).trim() === '') {
-      return 'WhatsApp number is required'
+      return 'Phone number is required'
     }
 
     const digits = String(value).replace(/\D/g, '')
     if (digits.length < 10 || digits.length > 12) {
-      return 'Please enter a valid WhatsApp number'
+      return 'Please enter a valid phone number'
     }
 
     return ''
@@ -293,7 +293,10 @@ export default function S1PersonalDetails({
 
         <div className='form-grid'>
           <div>
-            <label className='male-label'>WhatsApp Phone Number *</label>
+            <label className='male-label'>Phone Number *</label>
+            <p className='text-xs text-gray-500 mb-1'>
+              We will send important updates by SMS to this number.
+            </p>
             <input
               type='tel'
               value={localData?.male_phone || ''}
@@ -483,7 +486,10 @@ export default function S1PersonalDetails({
 
         <div className='form-grid'>
           <div>
-            <label className='female-label'>WhatsApp Phone Number *</label>
+            <label className='female-label'>Phone Number *</label>
+            <p className='text-xs text-gray-500 mb-1'>
+              We will send important updates by SMS to this number.
+            </p>
             <input
               type='tel'
               value={localData?.female_phone || ''}
